@@ -1,0 +1,49 @@
+<!--
+ * @Author: Misaki
+ * @Date: 2023-07-20 09:13:58
+ * @LastEditTime: 2023-07-20 09:36:21
+ * @LastEditors: Misaki
+ * @Description: 
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet"> 
+    <title>Document</title>
+    <style>
+        .account {
+            width: 400px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+<div class="account">
+    <h1>注册</h1>
+    <form>
+        {% for field in form %}
+            {% if field.name == 'code' %}
+                <div class="form-group">
+                    <label for="{{field.id_for_label}}">{{field.label}}</label>
+                    <div class="clearfix">
+                        <div class="col-md-6" style="padding-left: 0;">{{field}}</div>
+                        <div class="col-md-6" style="padding-left: 0;"><input type="button" class="btn btn-default" value="点击获取验证码"></div>
+                    </div>
+                </div>
+
+
+            {% else %}
+                <div class="form-group">
+                    <label for="{{field.id_for_label}}">{{field.label}}</label>
+                    {{field}}
+                </div>
+            {% endif %}
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">提 交</button>
+    </form>
+</div>
+</body>
+</html>

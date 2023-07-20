@@ -1,0 +1,48 @@
+<!--
+ * @Author: Misaki
+ * @Date: 2023-07-20 12:17:40
+ * @LastEditTime: 2023-07-20 16:05:24
+ * @LastEditors: Misaki
+ * @Description: 
+-->
+{% extends 'layout/basic.html' %}
+{% load static %}
+
+{% block title %}{% endblock %}
+
+{% block css%}
+<link rel="stylesheet" href="{% static 'css/account.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="account">
+        <h1>注册</h1>
+        <form>
+            {% for field in form %}
+            {% if field.name == 'code' %}
+            <div class="form-group">
+                <label for="{{field.id_for_label}}">{{field.label}}</label>
+                <div class="clearfix">
+                    <div class="col-md-6" style="padding-left: 0;">{{field}}</div>
+                    <div class="col-md-6" style="padding-left: 0;"><input type="button" class="btn btn-default"
+                            value="点击获取验证码"></div>
+                </div>
+            </div>
+
+
+            {% else %}
+            <div class="form-group">
+                <label for="{{field.id_for_label}}">{{field.label}}</label>
+                {{field}}
+            </div>
+            {% endif %}
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">提 交</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+{% endblock %}

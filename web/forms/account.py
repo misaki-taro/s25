@@ -1,14 +1,15 @@
 '''
 Author: Misaki
-Date: 2023-07-19 16:20:50
-LastEditTime: 2023-07-20 10:56:26
+Date: 2023-07-20 15:58:24
+LastEditTime: 2023-07-20 15:59:30
 LastEditors: Misaki
 Description: 
 '''
+
 from django.shortcuts import render
 
 from django import forms
-from app_01 import models
+from web import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 
@@ -36,10 +37,4 @@ class RegisterModelForm(forms.ModelForm):
         for name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
             field.widget.attrs['placeholder'] = '请输入{0}'.format(field.label)
-    
-
-# Create your views here.
-def register(request):
-    form = RegisterModelForm()
-    return render(request, 'app_01/register.html', {'form': form})
     

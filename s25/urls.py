@@ -1,3 +1,10 @@
+'''
+Author: Misaki
+Date: 2023-07-19 14:38:40
+LastEditTime: 2023-07-20 15:31:40
+LastEditors: Misaki
+Description: 
+'''
 """
 URL configuration for s25 project.
 
@@ -15,10 +22,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from app_01 import views
+from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('app_01/register/', views.register)
+    path('app_01/', include(('app_01.urls', 'app_01'), namespace='app_01')),
+    path('', include(('web.urls', 'web')))
 ]
