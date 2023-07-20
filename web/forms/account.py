@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-20 15:58:24
-LastEditTime: 2023-07-20 15:59:30
+LastEditTime: 2023-07-20 17:22:17
 LastEditors: Misaki
 Description: 
 '''
@@ -12,6 +12,7 @@ from django import forms
 from web import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
+from django.conf import settings
 
 class RegisterModelForm(forms.ModelForm):
     mobile_phone = forms.CharField(label='手机号', 
@@ -37,4 +38,29 @@ class RegisterModelForm(forms.ModelForm):
         for name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
             field.widget.attrs['placeholder'] = '请输入{0}'.format(field.label)
+
+class SendSmsForm(forms.Form):
+    mobile_phone = forms.CharField(label='手机号', 
+                                   validators=[RegexValidator(r'^(1[3|4|5|6|7|8|9])\d{9}$', 
+                                                              '手机号格式错误')])
     
+    def __init__(self, request, *args, **kwargs):
+        super().__init__(*args, **kwargs) 
+        self.request = request
+    
+    # 钩子函数的作用就是 监听某个东西是否符合预期，不符合的话在中间截断不让到达目标
+    def clean_mobile_phone(self):
+        mobile_phone = self.cleared_data['mobile_phone']
+        
+        # 判断短信模板是否有问题
+        tpl = self.request.GET['tpl']
+        template_id = setting.ALI_SMS_TEMPLATE.get(tpl)
+        if not template_id:
+            raise ValidationError('短信模板错误')
+        
+        # 校验数据库是否有手机号
+        exists = models.UserInfo.objects.filter(mobile_phone=mobile_phone).exists()
+        if exists:
+            raise ValidationError('手机号已存在')
+        
+        return mobile_phone

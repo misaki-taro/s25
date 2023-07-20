@@ -127,6 +127,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # 本地配置
 SMS = 0
 
+# 阿里云短信服务
+ALI_SMS_TEMPLATE = {
+    'register': 548760,
+    'login': 548762
+}
 
 # 配置本地 local_settings
 try:
