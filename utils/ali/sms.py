@@ -18,8 +18,8 @@ from alibabacloud_tea_console.client import Client as ConsoleClient
 from alibabacloud_darabonba_string.client import Client as StringClient
 from alibabacloud_darabonba_time.client import Client as TimeClient
 
-ACCESS_KEY_ID = 'LTAI5t6VkBcG869ZEN6est4q'
-ACCESS_KEY_SECRET = 'nnX7sbmj0jDzoRdVTalo8lRKxtGtIB'
+ACCESS_KEY_ID = ''
+ACCESS_KEY_SECRET = ''
 
 
 class Sample:
