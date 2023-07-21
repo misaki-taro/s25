@@ -12,6 +12,12 @@
 
 {% block css%}
 <link rel="stylesheet" href="{% static 'css/account.css' %}">
+<style>
+    .error-msg{
+        color: red;
+        position: absolute;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -35,6 +41,7 @@
             <div class="form-group">
                 <label for="{{field.id_for_label}}">{{field.label}}</label>
                 {{field}}
+                <span class="error-msg"></span>
             </div>
             {% endif %}
             {% endfor %}
@@ -52,6 +59,8 @@
 
         // 绑定获取验证码按钮
         function bindClickBtnSms(){
+            $('.error-msg').empty();
+
             $('#btnSms').click(function(){
                 var mobilePhone = $('#id_mobile_phone').val();
 
@@ -59,12 +68,36 @@
                 $.ajax({
                     url: "{% url 'web:send_sms' %}", // 等价于 /send/sms/
                     type: "GET",
-                    data: {mobile_phone: mobilePhone},
+                    data: {mobile_phone: mobilePhone, tpl: "register"},
                     success: function(res){
-                        console.log(res);
+                        if(res.status){
+                            sendSmsRemind();
+                        }else{
+                            console.log(res)
+                            $.each(res.error, function(key, value){
+                                $("#id_"+key).next().text(value[0]);
+                            })
+                        }
                     }
                 })
             })
+        }
+        /*
+        倒计时
+         */
+         function sendSmsRemind() {
+            var $smsBtn = $('#btnSms');
+            $smsBtn.prop('disabled', true); // 禁用
+            var time = 60;
+            var remind = setInterval(function () {
+                $smsBtn.val(time + '秒重新发送');
+                time = time - 1;
+                if (time < 1) {
+                    clearInterval(remind);
+                    $smsBtn.val('点击获取验证码').prop('disabled', false);
+                }
+            }, 1000)
+
         }
     </script>
 {% endblock %}
