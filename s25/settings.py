@@ -133,11 +133,6 @@ ALI_SMS_TEMPLATE = {
     'login': 548762
 }
 
-# 配置本地 local_settings
-try:
-    from local_settings import *
-except ImportError:
-    pass
 
 # django
 CACHES = {
@@ -154,3 +149,14 @@ CACHES = {
         }
     }
 }
+
+ALI_ACCESS = {
+    'ACCESS_KEY_ID': '',
+    'ACCESS_KEY_SECRET': ''
+}
+
+# 配置本地 local_settings
+try:
+    from .local_settings import *
+except ImportError:
+    pass

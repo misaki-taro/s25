@@ -10,8 +10,13 @@ from django.http import JsonResponse
 from web.forms import account
 
 def register(request):
-    form = account.RegisterModelForm()
-    return render(request, 'register.html', {'form': form}) 
+    if request.method == 'GET':
+        form = account.RegisterModelForm()
+        return render(request, 'register.html', {'form': form}) 
+    form = account.RegisterModelForm(data=request.POST)
+    if form.is_valid():
+        return JsonResponse({'status': True})
+    return JsonResponse({'status': False, 'error': form.errors})
 
 def send_sms(request):
     form = account.SendSmsForm(request, data=request.GET)

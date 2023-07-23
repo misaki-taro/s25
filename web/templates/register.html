@@ -24,7 +24,8 @@
 <div class="container">
     <div class="account">
         <h1>注册</h1>
-        <form>
+        <form id="regForm" method="POST" novalidate>
+            {% csrf_token %}
             {% for field in form %}
             {% if field.name == 'code' %}
             <div class="form-group">
@@ -45,7 +46,7 @@
             </div>
             {% endif %}
             {% endfor %}
-            <button type="submit" class="btn btn-primary">提 交</button>
+            <button id="btnSubmit" type="button" class="btn btn-primary">提 交</button>
         </form>
     </div>
 </div>
@@ -54,7 +55,8 @@
 {% block js %}
     <script>
         $(function (){
-            bindClickBtnSms()
+            bindClickBtnSms();
+            bindClickSubmit();
         });
 
         // 绑定获取验证码按钮
@@ -73,15 +75,42 @@
                         if(res.status){
                             sendSmsRemind();
                         }else{
-                            console.log(res)
+                            console.log(res);
                             $.each(res.error, function(key, value){
                                 $("#id_"+key).next().text(value[0]);
-                            })
+                            });
                         }
                     }
                 })
             })
         }
+
+        // 绑定提交按钮
+        function bindClickSubmit(){
+            $('#btnSubmit').click(function(){
+                $('.error-msg').empty();
+                // 收集表单中的数据（找到每一个字段）$('#regForm').serialize()
+                // 数据ajax发送到后台
+                $.ajax({
+                    url: "{% url 'web:register' %}",
+                    type: "POST",
+                    data: $("#regForm").serialize(),  // 所有字段数据 + csrf token
+                    dataType: "JSON",
+                    success: function(res){
+                        if(res.status){
+                            // 跳转
+                            location.href = res.data;
+                        }else{
+                            console.log(res);
+                            $.each(res.error, function(key, value){
+                                $("#id_"+key).next().text(value[0]);
+                            });
+                        }
+                    }
+                })
+            })
+        }
+
         /*
         倒计时
          */

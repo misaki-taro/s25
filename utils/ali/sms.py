@@ -17,9 +17,10 @@ from alibabacloud_tea_util.client import Client as UtilClient
 from alibabacloud_tea_console.client import Client as ConsoleClient
 from alibabacloud_darabonba_string.client import Client as StringClient
 from alibabacloud_darabonba_time.client import Client as TimeClient
+from django.conf import settings
 
-ACCESS_KEY_ID = ''
-ACCESS_KEY_SECRET = ''
+ACCESS_KEY_ID = settings.ALI_ACCESS.get('ACCESS_KEY_ID')
+ACCESS_KEY_SECRET = settings.ALI_ACCESS.get('ACCESS_KEY_SECRET')
 
 
 class Sample:

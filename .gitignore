@@ -9,6 +9,7 @@ __pycache__/
 # Django stuff:
 local_settings.py
 *.sqlite3
+s25/local_settings.py
 
 # database migrations
 */migrations/*.py
