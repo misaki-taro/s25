@@ -17,8 +17,9 @@ from utils.ali import sms
 from utils import encrypt
 import random
 from django_redis import get_redis_connection
+from web.forms.boostrap import BoostrapForm
 
-class RegisterModelForm(forms.ModelForm):
+class RegisterModelForm(BoostrapForm, forms.ModelForm):
     password = forms.CharField(
         label='密码', 
         min_length=8,
@@ -51,12 +52,12 @@ class RegisterModelForm(forms.ModelForm):
         model = models.UserInfo
         fields = ['username', 'email', 'password', 'comfirm_password', 'mobile_phone', 'code']
     
-    # 为所有标签加上样式
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
-            field.widget.attrs['placeholder'] = '请输入{0}'.format(field.label)
+    # # 为所有标签加上样式
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     for name, field in self.fields.items():
+    #         field.widget.attrs['class'] = 'form-control'
+    #         field.widget.attrs['placeholder'] = '请输入{0}'.format(field.label)
     
 
     def clean_username(self):
@@ -138,8 +139,11 @@ class SendSmsForm(forms.Form):
         
         # 校验数据库是否有手机号
         exists = models.UserInfo.objects.filter(mobile_phone=mobile_phone).exists()
-        if exists:
+        if exists and tpl == 'register':
             raise ValidationError('手机号已存在')
+
+        if not exists and tpl == 'login':
+            raise ValidationError('手机号不存在')
         
         # # 校验发短信
         # send_sample = sms.Sample()
@@ -165,3 +169,38 @@ class SendSmsForm(forms.Form):
         
         
         return mobile_phone
+
+class LoginSMSForm(BoostrapForm, forms.Form):
+    mobile_phone = forms.CharField(label='手机号', 
+                                   validators=[RegexValidator(r'^(1[3|4|5|6|7|8|9])\d{9}$','手机号格式错误')])
+
+    code = forms.CharField(
+        label='验证码', 
+        widget=forms.TextInput) 
+    
+    def clean_mobile_phone(self):
+        mobile_phone = self.cleaned_data['mobile_phone']
+        exist = models.UserInfo.objects.filter(mobile_phone=mobile_phone).exists()
+        if not exist:
+            raise ValidationError('手机号不存在')
+        return mobile_phone
+    
+    def clean_code(self):
+        code = self.cleaned_data['code']
+        mobile_phone = self.cleaned_data.get('mobile_phone')
+        
+        # 不存在手机号
+        if not mobile_phone:
+            return code
+        
+        conn = get_redis_connection()
+        redis_code = conn.get(mobile_phone)
+        if not redis_code:
+            raise ValidationError('验证码失效或者未发送，请重新发送')
+        
+        redis_str_code = redis_code.decode('utf-8')
+        
+        if code != redis_str_code:
+            raise ValidationError('验证码错误')
+        
+        return code

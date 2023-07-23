@@ -1,3 +1,4 @@
+
 <!--
  * @Author: Misaki
  * @Date: 2023-07-20 12:17:40
@@ -8,7 +9,7 @@
 {% extends 'layout/basic.html' %}
 {% load static %}
 
-{% block title %} 用户注册 {% endblock %}
+{% block title %} 用户短信登录 {% endblock %}
 
 {% block css%}
 <link rel="stylesheet" href="{% static 'css/account.css' %}">
@@ -23,8 +24,8 @@
 {% block content %}
 <div class="container">
     <div class="account">
-        <div class="title">用户注册</div>
-        <form id="regForm" method="POST" novalidate>
+        <div class="title">用户短信登录</div>
+        <form id="smsForm" method="POST" novalidate>
             {% csrf_token %}
             {% for field in form %}
             {% if field.name == 'code' %}
@@ -46,7 +47,7 @@
             </div>
             {% endif %}
             {% endfor %}
-            <button id="btnSubmit" type="button" class="btn btn-primary">提 交</button>
+            <button id="btnSubmit" type="button" class="btn btn-primary">登 录</button>
         </form>
     </div>
 </div>
@@ -70,7 +71,7 @@
                 $.ajax({
                     url: "{% url 'web:send_sms' %}", // 等价于 /send/sms/
                     type: "GET",
-                    data: {mobile_phone: mobilePhone, tpl: "register"},
+                    data: {mobile_phone: mobilePhone, tpl: "login"},
                     success: function(res){
                         if(res.status){
                             sendSmsRemind();
@@ -92,9 +93,9 @@
                 // 收集表单中的数据（找到每一个字段）$('#regForm').serialize()
                 // 数据ajax发送到后台
                 $.ajax({
-                    url: "{% url 'web:register' %}",
+                    url: "{% url 'web:login_sms' %}",
                     type: "POST",
-                    data: $("#regForm").serialize(),  // 所有字段数据 + csrf token
+                    data: $("#smsForm").serialize(),  // 所有字段数据 + csrf token
                     dataType: "JSON",
                     success: function(res){
                         if(res.status){
