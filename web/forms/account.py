@@ -1,6 +1,13 @@
 '''
 Author: Misaki
 Date: 2023-07-20 15:58:24
+LastEditTime: 2023-07-24 15:07:27
+LastEditors: Misaki
+Description: 
+'''
+'''
+Author: Misaki
+Date: 2023-07-20 15:58:24
 LastEditTime: 2023-07-21 13:59:56
 LastEditors: Misaki
 Description: 
@@ -17,9 +24,9 @@ from utils.ali import sms
 from utils import encrypt
 import random
 from django_redis import get_redis_connection
-from web.forms.boostrap import BoostrapForm
+from web.forms.bootstrap import BootstrapForm
 
-class RegisterModelForm(BoostrapForm, forms.ModelForm):
+class RegisterModelForm(BootstrapForm, forms.ModelForm):
     password = forms.CharField(
         label='密码', 
         min_length=8,
@@ -170,7 +177,7 @@ class SendSmsForm(forms.Form):
         
         return mobile_phone
 
-class LoginSMSForm(BoostrapForm, forms.Form):
+class LoginSMSForm(BootstrapForm, forms.Form):
     mobile_phone = forms.CharField(label='手机号', 
                                    validators=[RegexValidator(r'^(1[3|4|5|6|7|8|9])\d{9}$','手机号格式错误')])
 
@@ -202,5 +209,32 @@ class LoginSMSForm(BoostrapForm, forms.Form):
         
         if code != redis_str_code:
             raise ValidationError('验证码错误')
+        
+        return code
+
+class LoginForm(BootstrapForm, forms.Form):
+    username = forms.CharField(label='邮箱或手机号')
+    password = forms.CharField(label='密码', widget=forms.PasswordInput(render_value=True))
+    code = forms.CharField(label='图片验证码')
+
+    def __init__(self, request, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request = request
+
+    def clean_password(self):
+        password = self.cleaned_data['password']
+        
+        return encrypt.md5(password)
+
+    # 先验证 图片验证码
+    def clean_code(self):
+        code = self.cleaned_data['code']
+        
+        request_code = self.request.session.get('image_code')
+        if not request_code:
+            raise ValidationError('验证码已过期，请重新获取')
+        
+        if request_code.upper() != code.upper():
+            raise ValidationError('验证码输入错误，请重新输入')
         
         return code

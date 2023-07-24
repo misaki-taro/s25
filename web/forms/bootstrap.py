@@ -1,4 +1,4 @@
-class BoostrapForm(object):
+class BootstrapForm(object):
     # 为所有标签加上样式
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

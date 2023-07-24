@@ -30,11 +30,15 @@
             {% for field in form %}
             {% if field.name == 'code' %}
             <div class="form-group">
-                <label for="{{field.id_for_label}}">{{field.label}}</label>
-                <div class="clearfix">
-                    <div class="col-md-6" style="padding-left: 0;">{{field}}</div>
-                    <div class="col-md-6" style="padding-left: 0;"><input type="button" id="btnSms" class="btn btn-default"
-                            value="点击获取验证码"></div>
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                <div class="row">
+                    <div class="col-xs-7">
+                        {{ field }}
+                        <span class="error-msg">{{ field.errors.0 }}</span>
+                    </div>
+                    <div class="col-xs-5">
+                        <img src="{% url 'web:image_code' %}" id="imageCode" title="点击更换图片">
+                    </div>
                 </div>
             </div>
 
@@ -43,91 +47,30 @@
             <div class="form-group">
                 <label for="{{field.id_for_label}}">{{field.label}}</label>
                 {{field}}
-                <span class="error-msg"></span>
+                <span class="error-msg">{{ field.errors.0 }}</span>
             </div>
             {% endif %}
             {% endfor %}
-            <button id="btnSubmit" type="button" class="btn btn-primary">登 录</button>
+
+            <div>
+                <div style="float: right;">
+                    <a href="{% url 'web:login_sms' %}">短信验证码登录?</a>
+                </div>
+            </div>
+
+            <button id="btnSubmit" type="submit" class="btn btn-primary">登 录</button>
         </form>
     </div>
 </div>
 {% endblock %}
 
 {% block js %}
-    <script>
-        $(function (){
-            bindClickBtnSms();
-            bindClickSubmit();
-        });
-
-        // 绑定获取验证码按钮
-        function bindClickBtnSms(){
-            $('.error-msg').empty();
-
-            $('#btnSms').click(function(){
-                var mobilePhone = $('#id_mobile_phone').val();
-
-                // 发送ajax请求，把手机号发过去
-                $.ajax({
-                    url: "{% url 'web:send_sms' %}", // 等价于 /send/sms/
-                    type: "GET",
-                    data: {mobile_phone: mobilePhone, tpl: "login"},
-                    success: function(res){
-                        if(res.status){
-                            sendSmsRemind();
-                        }else{
-                            console.log(res);
-                            $.each(res.error, function(key, value){
-                                $("#id_"+key).next().text(value[0]);
-                            });
-                        }
-                    }
-                })
-            })
-        }
-
-        // 绑定提交按钮
-        function bindClickSubmit(){
-            $('#btnSubmit').click(function(){
-                $('.error-msg').empty();
-                // 收集表单中的数据（找到每一个字段）$('#regForm').serialize()
-                // 数据ajax发送到后台
-                $.ajax({
-                    url: "{% url 'web:login_sms' %}",
-                    type: "POST",
-                    data: $("#smsForm").serialize(),  // 所有字段数据 + csrf token
-                    dataType: "JSON",
-                    success: function(res){
-                        if(res.status){
-                            // 跳转
-                            location.href = res.data;
-                        }else{
-                            console.log(res);
-                            $.each(res.error, function(key, value){
-                                $("#id_"+key).next().text(value[0]);
-                            });
-                        }
-                    }
-                })
-            })
-        }
-
-        /*
-        倒计时
-         */
-         function sendSmsRemind() {
-            var $smsBtn = $('#btnSms');
-            $smsBtn.prop('disabled', true); // 禁用
-            var time = 60;
-            var remind = setInterval(function () {
-                $smsBtn.val(time + '秒重新发送');
-                time = time - 1;
-                if (time < 1) {
-                    clearInterval(remind);
-                    $smsBtn.val('点击获取验证码').prop('disabled', false);
-                }
-            }, 1000)
-
-        }
-    </script>
+<script>
+    $(function(){
+        $('#imageCode').click(function(){
+            var oldSrc = $(this).attr('src');
+            $(this).attr('src', oldSrc+'?');
+        })
+    })
+</script>
 {% endblock %}
