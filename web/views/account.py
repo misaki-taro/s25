@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-20 15:23:57
-LastEditTime: 2023-07-24 16:41:10
+LastEditTime: 2023-07-25 15:41:16
 LastEditors: Misaki
 Description: 
 '''
@@ -11,6 +11,8 @@ from web.forms import account
 from utils.image_code import check_code
 from django.db.models import Q
 from web import models
+import uuid
+import datetime
 
 def register(request):
     if request.method == 'GET':
@@ -18,7 +20,21 @@ def register(request):
         return render(request, 'register.html', {'form': form}) 
     form = account.RegisterModelForm(data=request.POST)
     if form.is_valid():
-        form.save()
+        # 入库并获取该条目
+        instance = form.save()
+        
+        # 创建一个免费版的交易
+        policy_object = models.PricePolicy.objects.filter(category=1, title='个人免费版').first()
+        models.Transaction.objects.create(
+            status=2,
+            order = str(uuid.uuid4()),
+            user=instance,
+            price_policy=policy_object,
+            count=0,
+            price=0,
+            start_datetime=datetime.datetime.now()
+        )
+        
         return JsonResponse({'status': True, 'data': '/login/'})
     return JsonResponse({'status': False, 'error': form.errors})
 
