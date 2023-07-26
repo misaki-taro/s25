@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-24 16:24:32
-LastEditTime: 2023-07-25 17:40:08
+LastEditTime: 2023-07-26 10:05:39
 LastEditors: Misaki
 Description: 
 '''
@@ -12,12 +12,21 @@ from django.conf import settings
 
 from web import models
 
+class Tracer(object):
+    def __init__(self):
+        self.user = None
+        self.price_policy = None
+
+
 class AuthMiddleware(MiddlewareMixin):
     
     def process_request(self, request):
+
+        request.tracer = Tracer()
+        
         user_id = request.session.get('user_id', 0)
         user_object = models.UserInfo.objects.filter(id=user_id).first()
-        request.tracer = user_object
+        request.tracer.user = user_object
 
         # 如果url在白名单，直接返回
         wrul = settings.WHITE_REGEX_URL_LIST
@@ -36,7 +45,7 @@ class AuthMiddleware(MiddlewareMixin):
         
         # 根据过期时间来确定额度是否降级
 
-        if not request.tracer:
+        if not request.tracer.user:
             return redirect('/login/')
         
         
