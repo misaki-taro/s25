@@ -1,21 +1,24 @@
 '''
 Author: Misaki
 Date: 2023-07-26 11:17:02
-LastEditTime: 2023-07-26 12:29:27
+LastEditTime: 2023-07-27 11:00:40
 LastEditors: Misaki
 Description: 
 '''
 from django import forms
 from web import models
 from web.forms.bootstrap import BootstrapForm
+from web.forms.widgets import ColorRadioSelect
 from django.core.exceptions import ValidationError
 
 class ProjectModelForm(BootstrapForm, forms.ModelForm):
+    bootstrap_class_exclude = ['color']
     class Meta:
         model = models.Project
         fields = ['name', 'color', 'desc']
         widgets = {
             'desc': forms.Textarea,
+            'color': ColorRadioSelect(attrs={'class': 'color-radio'}),
         }
     
     def __init__(self, request, *args, **kwargs):

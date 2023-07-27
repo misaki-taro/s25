@@ -1,21 +1,24 @@
 '''
 Author: Misaki
 Date: 2023-07-24 16:24:32
-LastEditTime: 2023-07-26 10:05:39
+LastEditTime: 2023-07-27 16:33:34
 LastEditors: Misaki
 Description: 
 '''
 import datetime
 from django.shortcuts import redirect
 from django.utils.deprecation import MiddlewareMixin
+from django.urls import reverse
 from django.conf import settings
 
 from web import models
+from web import views
 
 class Tracer(object):
     def __init__(self):
         self.user = None
         self.price_policy = None
+        self.project = None
 
 
 class AuthMiddleware(MiddlewareMixin):
@@ -47,5 +50,24 @@ class AuthMiddleware(MiddlewareMixin):
 
         if not request.tracer.user:
             return redirect('/login/')
+
+    def process_view(self, request, view, args, kwargs):
+        if not request.path_info.startswith('/manage/'):
+            return
+        
+        project_id = kwargs.get('project_id')
+        
+        project_object = models.Project.objects.filter(creator=request.tracer.user, id=project_id).first()
+        if project_object:
+            request.tracer.project = project_object
+            return
+        
+        project_user_object = models.ProjectUser.objects.filter(user=request.tracer.user, project_id=project_id).first()
+        if project_user_object:
+            # 是我参与的项目
+            request.tracer.project = project_user_object.project
+            return
+
+        return redirect(reverse(views.project.project_list))
         
         
