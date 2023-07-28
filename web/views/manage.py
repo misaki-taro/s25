@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-27 14:53:47
-LastEditTime: 2023-07-27 15:37:21
+LastEditTime: 2023-07-29 00:21:07
 LastEditors: Misaki
 Description: 
 '''
@@ -23,9 +23,6 @@ def file(request, project_id):
     
     return render(request, 'file.html')
 
-def wiki(request, project_id):
-    
-    return render(request, 'wiki.html')
 
 def setting(request, project_id):
     

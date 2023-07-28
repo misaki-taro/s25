@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-20 15:58:24
-LastEditTime: 2023-07-24 15:07:27
+LastEditTime: 2023-07-29 00:52:55
 LastEditors: Misaki
 Description: 
 '''
@@ -213,6 +213,7 @@ class LoginSMSForm(BootstrapForm, forms.Form):
         return code
 
 class LoginForm(BootstrapForm, forms.Form):
+    bootstrap_class_exclude = []
     username = forms.CharField(label='邮箱或手机号')
     password = forms.CharField(label='密码', widget=forms.PasswordInput(render_value=True))
     code = forms.CharField(label='图片验证码')
