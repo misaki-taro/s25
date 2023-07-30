@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-20 14:40:48
-LastEditTime: 2023-07-29 00:57:25
+LastEditTime: 2023-07-30 12:14:25
 LastEditors: Misaki
 Description: 
 '''
@@ -34,6 +34,10 @@ urlpatterns = [
             # wiki
             path('wiki/', wiki.wiki, name='wiki'),
             path('wiki/add/', wiki.wiki_add, name='wiki_add'),
+            path('wiki/catalog/', wiki.catalog, name='wiki_catalog'),
+            path('wiki/delete/<int:wiki_id>/', wiki.wiki_delete, name='wiki_delete'),
+            path('wiki/edit/<int:wiki_id>/', wiki.wiki_edit, name='wiki_edit'),
+            
 
             re_path(r'^setting/', manage.setting, name='setting'),
         ], 'manage'), namespace='manage')),   

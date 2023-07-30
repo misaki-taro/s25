@@ -46,38 +46,28 @@
           <i class="fa fa-book" aria-hidden="true"></i> wiki文档
         </div>
         <div class="function">
-            <a type="button" class="btn btn-success btn-xs"
-                       href="{% url 'web:manage:wiki_add' project_id=request.tracer.project.id %}">
-                        <i class="fa fa-plus-circle" aria-hidden="true"></i> 新建
-            </a>
-            {% if wiki_object %}
-                        <a type="button" class="btn btn-primary btn-xs"
-                           href="{% url 'web:manage:wiki_edit' project_id=request.tracer.project.id wiki_id=wiki_object.id %}">
-                            <i class="fa fa-edit" aria-hidden="true"></i> 编辑
-                        </a>
-                        <a type="button" class="btn btn-danger btn-xs"
-                           href="{% url 'web:manage:wiki_delete' project_id=request.tracer.project.id wiki_id=wiki_object.id %}">
-                            <i class="fa fa-trash" aria-hidden="true"></i> 删除
-                        </a>
-            {% endif %}
-        </div>
+          <a type="button" class="btn btn-success btn-xs"
+                     href="{% url 'web:manage:wiki_add' project_id=request.tracer.project.id %}">
+                      <i class="fa fa-plus-circle" aria-hidden="true"></i> 新建
+                  </a>
+      </div>
       </div>
       <div class="panel-body">
         <div class="col-sm-3 title-list">
-          <ul id='catalog'>
-          </ul>
+          <ul id='catalog'></ul>
         </div>
         <div class="col-sm-9 content">
-          {% if wiki_object %}
-            <div id="previewMarkdown">
-              <textarea>{{ wiki_object.content }}</textarea>
-            </div>
-          {% else %}
-            <div style="text-align: center;margin-top: 50px;">
-              <h4>《{{ request.tracer.project.name }}》wiki文档库</h4>
-              <a href="{% url 'web:manage:wiki_add' project_id=request.tracer.project.id %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> 新建文章</a>
-            </div>
-          {% endif %}
+          <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+              <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                <span class='error-msg'>{{ field.errors.0 }}</span>
+              </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">提 交</button>
+          </form>
         </div>
         <div></div>
       </div>

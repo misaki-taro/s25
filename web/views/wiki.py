@@ -1,30 +1,82 @@
 '''
 Author: Misaki
 Date: 2023-07-28 23:38:37
-LastEditTime: 2023-07-29 01:04:28
+LastEditTime: 2023-07-30 12:34:58
 LastEditors: Misaki
 Description: 
 '''
 from django.shortcuts import render, redirect
 from web.forms.wiki import WikiModelForm
+from django.http import JsonResponse
 from django.urls import reverse
+from web import models
 
 def wiki(request, project_id):
-    print('here')
-    return render(request, 'wiki.html')
+    # wiki 首页
+    wiki_id = request.GET.get('wiki_id')
+    if not wiki_id or not wiki_id.isdecimal():
+        return render(request, 'wiki.html')
+    
+    wiki_object = models.Wiki.objects.filter(id=wiki_id, project_id=project_id).first()
+    return render(request, 'wiki.html', {'wiki_object': wiki_object})
 
 def wiki_add(request, project_id):
-    print('here wikiadd')
     # 展示页面
     if request.method == 'GET':
-        form = WikiModelForm()
-        return render(request, 'wiki_add.html', {'form': form})
+        form = WikiModelForm(request)
+        return render(request, 'wiki_form.html', {'form': form})
     
-    form = WikiModelForm(data=request.POST)
+    form = WikiModelForm(request, data=request.POST)
     if form.is_valid():
+        # 判断用户是否已经选择父文章
+        if form.instance.parent:
+            form.instance.depth = form.instance.parent.depth + 1
+        else:
+            form.instance.depth = 1
+        
         form.instance.project = request.tracer.project
         form.save()
         url = reverse('web:manage:wiki_add', kwargs={'project_id': project_id})
         return redirect(url)
 
-    return render(request, 'wiki_add.html', {'form': form})
+    return render(request, 'wiki_form.html', {'form': form})
+
+def catalog(request, project_id):
+    # 获取该项目的所有文章
+    data = models.Wiki.objects.filter(project=request.tracer.project).values('id', 'title', 'parent_id').order_by('depth', 'id')
+    print(data)
+    
+    # Json形式返回给ajax 
+    return JsonResponse({'status':True, 'data': list(data)})
+
+def wiki_delete(request, project_id, wiki_id):
+    wiki_object = models.Wiki.objects.filter(project=request.tracer.project, id=wiki_id).delete()
+    url = reverse('web:manage:wiki', kwargs={'project_id': project_id})
+    return redirect(url)
+
+def wiki_edit(request, project_id, wiki_id):
+    wiki_object = models.Wiki.objects.filter(project=request.tracer.project, id=wiki_id).first()
+    # 找不到相应的wiki直接跳转到wiki首页
+    if not wiki_object:
+        url = reverse('web:manage:wiki', kwargs={'project_id': project_id})
+        return redirect(url)
+    
+    # 展示默认信息 (GET请求)
+    if request.method == 'GET':
+        form = WikiModelForm(request, instance=wiki_object)
+        return render(request, 'wiki_form.html', {'form': form})
+        # url = reverse('web:manage:wiki', kwargs={'project_id': project_id}) + '?wiki_id={0}'.format(wiki_id)
+        # return redirect(url)
+    
+    # 修改编辑wiki (POST请求)
+    form = WikiModelForm(request, data=request.POST, instance=wiki_object)
+    if form.is_valid():
+        if form.instance.parent:
+            form.instance.depth += 1
+        else:
+            form.instance.path = 1
+        form.save()
+        url = reverse('web:manage:wiki', 
+                      kwargs={'project_id': project_id}) + '?wiki_id={0}'.format(wiki_id)
+
+        return redirect(url)
