@@ -166,6 +166,10 @@ WHITE_REGEX_URL_LIST = {
     '/index/',
 }
 
+# 腾讯COS
+TENCENT_COS_ID = "COS的secret_id"
+TENCENT_COS_KEY = "COS的secret_key"
+
 # 配置本地 local_settings
 try:
     from .local_settings import *

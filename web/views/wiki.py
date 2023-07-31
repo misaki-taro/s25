@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-28 23:38:37
-LastEditTime: 2023-07-30 12:34:58
+LastEditTime: 2023-07-31 12:25:39
 LastEditors: Misaki
 Description: 
 '''
@@ -10,6 +10,10 @@ from web.forms.wiki import WikiModelForm
 from django.http import JsonResponse
 from django.urls import reverse
 from web import models
+from utils.tencent.cos import upload_file
+from utils.encrypt import uid
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 def wiki(request, project_id):
     # wiki 首页
@@ -80,3 +84,35 @@ def wiki_edit(request, project_id, wiki_id):
                       kwargs={'project_id': project_id}) + '?wiki_id={0}'.format(wiki_id)
 
         return redirect(url)
+
+@csrf_exempt
+@xframe_options_sameorigin
+def wiki_upload(request, project_id):
+    """ markdown插件上传图片 """
+    result = {
+        'success': 0,
+        'message': None,
+        'url': None
+    }
+
+    image_object = request.FILES.get('editormd-image-file')
+    if not image_object:
+        result['message'] = "文件不存在"
+        return JsonResponse(result)
+    
+    ext = image_object.name.rsplit('.')[-1]
+    key = '{}.{}'.format(uid(request.tracer.user.mobile_phone), ext)
+    bucket = request.tracer.project.bucket
+    region = request.tracer.project.region
+    
+    image_url = upload_file(bucket, region, image_object, key)
+    
+    result['success'] = 1
+    result['url'] = image_url
+
+    print(result)
+    
+    return JsonResponse(result)
+    
+
+    

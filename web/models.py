@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-20 12:04:26
-LastEditTime: 2023-07-28 19:21:03
+LastEditTime: 2023-07-31 09:57:10
 LastEditors: Misaki
 Description: 
 '''
@@ -80,7 +80,10 @@ class Project(models.Model):
     join_count = models.SmallIntegerField(verbose_name='参与人数', default=1)
     creator = models.ForeignKey(verbose_name='创建者', to='UserInfo', on_delete=models.CASCADE)
     create_datetime = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
-    
+
+    # 新增字段，cos存储相关
+    bucket = models.CharField(verbose_name='cos桶', max_length=128)
+    region = models.CharField(verbose_name='cos区域', max_length=32)
 
 class ProjectUser(models.Model):
     """ 项目参与者 """
@@ -89,7 +92,6 @@ class ProjectUser(models.Model):
     star = models.BooleanField(verbose_name='星标', default=False)
 
     create_datetime = models.DateTimeField(verbose_name='加入时间', auto_now_add=True)
-
     
 class Wiki(models.Model):
     project = models.ForeignKey(verbose_name='项目', to='Project', on_delete=models.CASCADE)

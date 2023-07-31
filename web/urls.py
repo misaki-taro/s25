@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-20 14:40:48
-LastEditTime: 2023-07-30 12:14:25
+LastEditTime: 2023-07-31 11:06:04
 LastEditors: Misaki
 Description: 
 '''
@@ -37,6 +37,7 @@ urlpatterns = [
             path('wiki/catalog/', wiki.catalog, name='wiki_catalog'),
             path('wiki/delete/<int:wiki_id>/', wiki.wiki_delete, name='wiki_delete'),
             path('wiki/edit/<int:wiki_id>/', wiki.wiki_edit, name='wiki_edit'),
+            path('wiki/upload/', wiki.wiki_upload, name='wiki_upload'),
             
 
             re_path(r'^setting/', manage.setting, name='setting'),

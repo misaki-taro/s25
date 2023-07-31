@@ -95,6 +95,7 @@
 <script src="{% static 'plugin/editor-md/editormd.min.js' %}"></script>
 <script>
   var WIKI_DETAIL_URL = "{% url 'web:manage:wiki' project_id=request.tracer.project.id %}";
+  var WIKI_UPLOAD_URL = "{% url 'web:manage:wiki_upload' project_id=request.tracer.project.id %}";
 
   $(function () {
     console.log('here');
@@ -106,7 +107,10 @@
     editormd('editor', {
       placeholder: "请输入内容",
       height: 500,
-      path: "{% static 'plugin/editor-md/lib/' %}"
+      path: "{% static 'plugin/editor-md/lib/' %}",
+      imageUpload:true, 
+      imageFormats:["jpg", "jpeg", "png", "gif"],
+      imageUploadURL: WIKI_UPLOAD_URL
     })
   }
 

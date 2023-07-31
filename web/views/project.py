@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-25 15:56:27
-LastEditTime: 2023-07-26 16:39:57
+LastEditTime: 2023-07-31 10:09:54
 LastEditors: Misaki
 Description: 
 '''
@@ -11,6 +11,8 @@ from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 from web.forms import project
 from web import models
+from utils.tencent.cos import create_bucket
+import time
 
 def project_list(request):
     # project_list页面
@@ -41,7 +43,14 @@ def project_list(request):
     # POST => 创建projecct
     form = project.ProjectModelForm(request, data=request.POST)
     if form.is_valid():
+        # 桶的相关字段
+        bucket = '{0}-{1}-1302722017'.format(request.tracer.user.mobile_phone, str(int(time.time())))
+        region = 'ap-guangzhou'
+        create_bucket(bucket, region)
+        
         # form没包含这个字段，需要自己写入
+        form.instance.bucket = bucket
+        form.instance.region = region
         form.instance.creator = request.tracer.user
         
         # 写入数据库
