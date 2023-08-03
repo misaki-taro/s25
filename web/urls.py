@@ -1,13 +1,13 @@
 '''
 Author: Misaki
 Date: 2023-07-20 14:40:48
-LastEditTime: 2023-07-31 11:06:04
+LastEditTime: 2023-08-03 15:46:19
 LastEditors: Misaki
 Description: 
 '''
 from django.contrib import admin
 from django.urls import path, include, re_path
-from web.views import account, home, project, manage, wiki
+from web.views import account, home, project, manage, wiki, file
 
 urlpatterns = [
     path('register/', account.register, name='register'),
@@ -29,7 +29,6 @@ urlpatterns = [
             re_path(r'^dashboard/', manage.dashboard, name='dashboard'),
             re_path(r'^issues/', manage.issues, name='issues'),
             re_path(r'^statistics/', manage.statistics, name='statistics'),
-            re_path(r'^file/', manage.file, name='file'),
 
             # wiki
             path('wiki/', wiki.wiki, name='wiki'),
@@ -39,6 +38,8 @@ urlpatterns = [
             path('wiki/edit/<int:wiki_id>/', wiki.wiki_edit, name='wiki_edit'),
             path('wiki/upload/', wiki.wiki_upload, name='wiki_upload'),
             
+            # file
+            path('file/', file.file, name='file'),
 
             re_path(r'^setting/', manage.setting, name='setting'),
         ], 'manage'), namespace='manage')),   
