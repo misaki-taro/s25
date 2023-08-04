@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-20 14:40:48
-LastEditTime: 2023-08-03 15:46:19
+LastEditTime: 2023-08-04 16:12:11
 LastEditors: Misaki
 Description: 
 '''
@@ -40,6 +40,7 @@ urlpatterns = [
             
             # file
             path('file/', file.file, name='file'),
+            path('file/delete/', file.file_delete, name='file_delete'),
 
             re_path(r'^setting/', manage.setting, name='setting'),
         ], 'manage'), namespace='manage')),   

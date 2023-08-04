@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-08-03 15:40:26
-LastEditTime: 2023-08-03 18:47:42
+LastEditTime: 2023-08-04 16:14:05
 LastEditors: Misaki
 Description: 
 '''
@@ -12,6 +12,7 @@ from django.shortcuts import render, redirect
 from web import models
 from web.forms.file import FileModelForm
 from django.http import JsonResponse
+from django.forms import model_to_dict
 
 
 def file(request, project_id):
@@ -35,6 +36,12 @@ def file(request, project_id):
     # GET请求就是展示页面
     if(request.method == 'GET'):
         form = FileModelForm(request, parent_object)    
+        parent = parent_object
+        breadcrumb_list = []
+        while parent:
+            breadcrumb_list.insert(0, model_to_dict(parent, ['id', 'name']))
+            parent = parent.parent
+        
 
         # 如果进入了目录, 就把当前项目当前目录的文件夹与文件都获得
         querryset = models.FileRepository.objects.filter(project=request.tracer.project) 
@@ -45,10 +52,29 @@ def file(request, project_id):
         else:
             file_object_list = querryset.filter(parent__isnull=True).order_by('-file_type')
         
-        return render(request, 'file.html', {'form': form, 'file_object_list': file_object_list})
+        
+        context = {
+            'form': form,
+            'file_object_list': file_object_list,
+            'breadcrumb_list': breadcrumb_list
+        }
+        
+        return render(request, 'file.html', context=context)
     
     # POST请求，提交页面
-    form = FileModelForm(request, parent_object, data=request.POST)
+    # 新建文件夹 or 编辑文件夹
+    fid = request.POST.get('fid', '')
+    edit_object = None
+    if fid.isdecimal():
+        edit_object = models.FileRepository.objects.filter(id=int(fid), 
+                                                           file_type=2,
+                                                           project=request.tracer.project).first()
+    
+    if edit_object:
+        form = FileModelForm(request, parent_object, data=request.POST, instance=edit_object)
+    else:
+        form = FileModelForm(request, parent_object, data=request.POST)
+    
     if(form.is_valid()):
         form.instance.project = request.tracer.project
         form.instance.file_type = 2
@@ -57,3 +83,14 @@ def file(request, project_id):
         form.save()
         return JsonResponse({'status': True})
     return JsonResponse({'status': False, 'error': form.errors})
+
+def file_delete(request, project_id):
+    fid = request.GET.get('fid')
+    
+    delete_object = models.FileRepository.objects.filter(project=request.tracer.project, id=fid).first()
+    
+    # cos删除、数据库删除、归还容量
+    
+    delete_object.delete()
+    
+    return JsonResponse({'status': True})
