@@ -41,6 +41,7 @@ urlpatterns = [
             # file
             path('file/', file.file, name='file'),
             path('file/delete/', file.file_delete, name='file_delete'),
+            path('cos/credential/', file.cos_credential, name='cos_credential'),
 
             re_path(r'^setting/', manage.setting, name='setting'),
         ], 'manage'), namespace='manage')),   
