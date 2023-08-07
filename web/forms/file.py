@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-08-03 17:07:40
-LastEditTime: 2023-08-03 17:22:55
+LastEditTime: 2023-08-07 16:37:26
 LastEditors: Misaki
 Description: 
 '''
@@ -13,7 +13,7 @@ from web import models
 from web.forms.bootstrap import BootstrapForm
 from django.core.exceptions import ValidationError
 
-class FileModelForm(BootstrapForm, forms.ModelForm):
+class FolderModelForm(BootstrapForm, forms.ModelForm):
     bootstrap_class_exclude = []
     
     def __init__(self, request, parent_object, *args, **kwargs):
@@ -40,3 +40,19 @@ class FileModelForm(BootstrapForm, forms.ModelForm):
             raise ValidationError('文件夹已存在')
         
         return name
+
+class FileModelForm(forms.ModelForm):
+    etag = forms.CharField(label='ETag')
+    
+    class Meta:
+        model = models.FileRepository
+        exclude = ['project', 'file_type', 'update_user', 'update_datetime']
+        
+    def __init__(self, request, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request = request
+
+    def clean_file_path(self):
+        return "https://{}".format(self.cleaned_data['file_path'])
+        
+    

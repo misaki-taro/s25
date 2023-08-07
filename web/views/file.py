@@ -1,19 +1,27 @@
 '''
 Author: Misaki
 Date: 2023-08-03 15:40:26
-LastEditTime: 2023-08-06 17:36:11
+LastEditTime: 2023-08-07 19:32:28
 LastEditors: Misaki
 Description: 
 '''
 
+from http.client import HTTPResponse
 from msilib.schema import File
+from urllib import response
 from winreg import QueryInfoKey
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, HttpResponse
 from web import models
-from web.forms.file import FileModelForm
+from web.forms.file import FolderModelForm, FileModelForm
 from django.http import JsonResponse
 from django.forms import model_to_dict
 from utils.tencent.cos import credential, delete_file, delete_file_list
+import json
+import requests
+from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
+from django.utils.encoding import escape_uri_path
+
 
 
 def file(request, project_id):
@@ -36,7 +44,7 @@ def file(request, project_id):
     
     # GET请求就是展示页面
     if(request.method == 'GET'):
-        form = FileModelForm(request, parent_object)    
+        form = FolderModelForm(request, parent_object)    
         parent = parent_object
         breadcrumb_list = []
         while parent:
@@ -57,7 +65,8 @@ def file(request, project_id):
         context = {
             'form': form,
             'file_object_list': file_object_list,
-            'breadcrumb_list': breadcrumb_list
+            'breadcrumb_list': breadcrumb_list,
+            'folder_object': parent_object
         }
         
         return render(request, 'file.html', context=context)
@@ -72,9 +81,9 @@ def file(request, project_id):
                                                            project=request.tracer.project).first()
     
     if edit_object:
-        form = FileModelForm(request, parent_object, data=request.POST, instance=edit_object)
+        form = FolderModelForm(request, parent_object, data=request.POST, instance=edit_object)
     else:
-        form = FileModelForm(request, parent_object, data=request.POST)
+        form = FolderModelForm(request, parent_object, data=request.POST)
     
     if(form.is_valid()):
         form.instance.project = request.tracer.project
@@ -137,7 +146,78 @@ def file_delete(request, project_id):
     return JsonResponse({'status': True})
 
 
+# 忽略post的csrf验证
+@csrf_exempt
 def cos_credential(request, project_id):
-    data_dict = credential(request.tracer.project.bucket, request.tracer.project.region)
-    return JsonResponse(data_dict)
+    # 先获取容量限制
+    per_file_limit = request.tracer.price_policy.per_file_size * 1024 * 1024
+    total_file_limit = request.tracer.price_policy.project_space * 1024 * 1024 * 1024
     
+    total_size = 0
+    file_list = json.loads(request.body.decode('utf-8'))
+
+    print(file_list)
+    
+    for item in file_list:
+        # 文件的字节大小 item['size'] = B
+        # 单文件限制的大小 M
+        # 超出限制
+        if item['size'] > per_file_limit:
+            msg = "单文件超出限制（最大{}M），文件：{}，请升级套餐。".format(request.tracer.price_policy.per_file_size, item['name'])
+            return JsonResponse({'status': False, 'error': msg})
+        
+        
+        total_size += item['size']
+    
+    # 总容量进行限制
+    # request.tracer.price_policy.project_space  # 项目的允许的空间
+    # request.tracer.project.use_space # 项目已使用的空间
+    if request.tracer.project.use_space + total_size > total_file_limit:
+        return JsonResponse({'status': False, 'error': "容量超过限制，请升级套餐。"})
+
+    data_dict = credential(request.tracer.project.bucket, request.tracer.project.region)
+    return JsonResponse({'status': True, 'data': data_dict})
+
+@csrf_exempt
+def file_post(request, project_id):
+    print(request.POST)
+    form = FileModelForm(request, data=request.POST)
+    if form.is_valid():
+        # 校验通过 写入到数据库
+        data_dict = form.cleaned_data
+        data_dict.pop('etag')
+        data_dict.update(
+            {'project': request.tracer.project, 
+             'file_type': 1, 
+             'update_user': request.tracer.user
+             })
+        instance = models.FileRepository.objects.create(**data_dict)
+
+        # 项目已经使用的空间
+        request.tracer.project.use_space += data_dict['file_size']
+        request.tracer.project.save()
+
+        result = {
+            'id': instance.id,
+            'name': instance.name,
+            'file_size': instance.file_size,
+            'username': instance.update_user.username,
+            'datetime': instance.update_datetime.strftime("%Y年%m月%d日 %H:%M"),
+            'download_url': reverse('web:manage:file_download', kwargs={'project_id': project_id, 'file_id': instance.id})
+            # 'file_type': instance.get_file_type_display()
+        }
+        return JsonResponse({'status': True, 'data': result})
+
+    return JsonResponse({'status': False, 'data': "文件错误"})
+
+def file_download(request, project_id, file_id):
+    file_object = models.FileRepository.objects.filter(project_id=project_id, id=file_id).first()
+    
+    res = requests.get(file_object.file_path)
+    data = res.iter_content()
+    
+    response = HttpResponse(data, content_type="application/octet-stream")
+    
+    # 设置下载的响应头
+    response['Content-Disposition'] = 'attachment; filename={}'.format(escape_uri_path(file_object.name))
+    return response

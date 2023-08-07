@@ -1,13 +1,13 @@
 '''
 Author: Misaki
 Date: 2023-07-20 14:40:48
-LastEditTime: 2023-08-04 16:12:11
+LastEditTime: 2023-08-07 20:14:09
 LastEditors: Misaki
 Description: 
 '''
 from django.contrib import admin
 from django.urls import path, include, re_path
-from web.views import account, home, project, manage, wiki, file
+from web.views import account, home, project, manage, wiki, file, setting
 
 urlpatterns = [
     path('register/', account.register, name='register'),
@@ -42,7 +42,14 @@ urlpatterns = [
             path('file/', file.file, name='file'),
             path('file/delete/', file.file_delete, name='file_delete'),
             path('cos/credential/', file.cos_credential, name='cos_credential'),
+            path('file/post/', file.file_post, name='file_post'),
+            path('file/download/<int:file_id>', file.file_download, name='file_download'),
 
-            re_path(r'^setting/', manage.setting, name='setting'),
+            # setting
+            path('setting/', setting.setting, name='setting'),
+            path('setting/delete/', setting.delete, name='setting_delete'),
+            
+
+            # re_path(r'^setting/', manage.setting, name='setting'),
         ], 'manage'), namespace='manage')),   
 ]
