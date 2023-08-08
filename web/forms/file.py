@@ -1,13 +1,12 @@
 '''
 Author: Misaki
 Date: 2023-08-03 17:07:40
-LastEditTime: 2023-08-07 16:37:26
+LastEditTime: 2023-08-08 10:51:26
 LastEditors: Misaki
 Description: 
 '''
 
 
-from genericpath import exists
 from django import forms
 from web import models
 from web.forms.bootstrap import BootstrapForm

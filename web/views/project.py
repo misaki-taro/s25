@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-25 15:56:27
-LastEditTime: 2023-07-31 10:09:54
+LastEditTime: 2023-08-08 15:18:29
 LastEditors: Misaki
 Description: 
 '''
@@ -54,7 +54,13 @@ def project_list(request):
         form.instance.creator = request.tracer.user
         
         # 写入数据库
-        form.save()
+        instance = form.save()
+
+        # 3.项目初始化问题类型
+        issues_type_object_list = []
+        for item in models.IssuesType.PROJECT_INIT_LIST:  # ["任务", '功能', 'Bug']
+            issues_type_object_list.append(models.IssuesType(project=instance, title=item))
+        models.IssuesType.objects.bulk_create(issues_type_object_list)
 
         return JsonResponse({'status': True})
     
