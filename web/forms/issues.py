@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-08-08 10:51:07
-LastEditTime: 2023-08-08 20:09:14
+LastEditTime: 2023-08-09 19:09:36
 LastEditors: Misaki
 Description: 
 '''
@@ -62,3 +62,11 @@ class IssuesReplyModelForm(BootstrapForm, forms.ModelForm):
     class Meta:
         model = models.IssuesReply
         fields = ['content', 'reply']
+
+
+class InviteModelForm(BootstrapForm, forms.ModelForm):
+    bootstrap_class_exclude = []
+    
+    class Meta:
+        model = models.ProjectInvite
+        fields = ['period', 'count']

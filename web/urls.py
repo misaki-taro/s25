@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-20 14:40:48
-LastEditTime: 2023-08-09 10:35:02
+LastEditTime: 2023-08-09 19:41:38
 LastEditors: Misaki
 Description: 
 '''
@@ -54,9 +54,12 @@ urlpatterns = [
             path('issues/detail/<int:issues_id>', issues.issues_detail, name='issues_detail'),
             path('issues/record/<int:issues_id>', issues.issues_record, name='issues_record'),
             path('issues/change/<int:issues_id>', issues.issues_change, name='issues_change'),
+            path('issues/invite/url/', issues.invite_url, name='invite_url'),
             
             
 
             # re_path(r'^setting/', manage.setting, name='setting'),
         ], 'manage'), namespace='manage')),   
+    
+    path('invite/join/<str:code>', issues.invite_join, name='invite_join'),
 ]

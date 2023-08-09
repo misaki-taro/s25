@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-08-08 10:24:30
-LastEditTime: 2023-08-09 17:45:00
+LastEditTime: 2023-08-09 19:11:15
 LastEditors: Misaki
 Description: 
 '''
@@ -10,9 +10,9 @@ Description:
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
-from web.forms.issues import IssuesModelForm, IssuesReplyModelForm
+from web.forms.issues import IssuesModelForm, IssuesReplyModelForm, InviteModelForm
 from web import models
-from utils import pagination
+from utils import pagination, encrypt
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.safestring import mark_safe
 import json
@@ -125,8 +125,10 @@ def issues(request, project_id):
         project_total_user.extend(join_user)
 
         form = IssuesModelForm(request)
+        invite_form = InviteModelForm()
         context = {
             'form': form, 
+            'invite_form': invite_form, 
             'issues_object_list': issues_object_list,
             'page_html': page_object.page_html(),
             'filter_list':[
@@ -141,6 +143,7 @@ def issues(request, project_id):
         return render(request, 'issues.html', context)
     
     form = IssuesModelForm(request, data=request.POST)
+
     
     if form.is_valid():
         form.instance.project = request.tracer.project
@@ -328,3 +331,36 @@ def issues_change(request, project_id, issues_id):
         return JsonResponse({'status': True, 'data': create_reply_record(change_record)})
 
     return JsonResponse({'status': False, 'error': "请重新输入"})
+
+def invite_url(request, project_id):
+    form = InviteModelForm(data=request.POST)
+    
+    if form.is_valid():
+        """
+        1. 创建随机的邀请码
+        2. 验证码保存到数据库
+        3. 限制：只有创建者才能邀请
+        """
+        if request.tracer.user != request.tracer.project.creator:
+            form.add_error('period', "无权创建邀请码")
+            return JsonResponse({'status': False, 'error': form.errors})
+
+        random_invite_code = encrypt.uid(request.tracer.user.mobile_phone)
+        form.instance.project = request.tracer.project
+        form.instance.code = random_invite_code
+        form.instance.creator = request.tracer.user
+        form.save()
+
+        # 将验邀请码返回给前端，前端页面上展示出来。
+        url = "{scheme}://{host}{path}".format(
+            scheme=request.scheme,
+            host=request.get_host(),
+            path=reverse('web:invite_join', kwargs={'code': random_invite_code})
+        )
+
+        return JsonResponse({'status': True, 'data': url})
+
+    return JsonResponse({'status': False, 'error': form.errors})
+
+def invite_join(request, code):
+    pass
