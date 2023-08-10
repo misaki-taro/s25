@@ -1,13 +1,13 @@
 '''
 Author: Misaki
 Date: 2023-07-20 14:40:48
-LastEditTime: 2023-08-09 19:41:38
+LastEditTime: 2023-08-10 19:18:39
 LastEditors: Misaki
 Description: 
 '''
 from django.contrib import admin
 from django.urls import path, include, re_path
-from web.views import account, home, project, manage, wiki, file, setting, issues
+from web.views import account, home, project, manage, wiki, file, setting, issues, dashboard, statistics
 
 urlpatterns = [
     path('register/', account.register, name='register'),
@@ -19,6 +19,11 @@ urlpatterns = [
     path('index/', home.index, name='index'),
     path('project/list/', project.project_list, name='project_list'),
 
+    # 支付
+    path('price/', home.price, name='price'),
+    path('payment/<int:policy_id>', home.payment, name='payment'),
+    path('pay/', home.pay, name='pay'),
+
     # 项目
     re_path(r'^project/star/(?P<project_type>\w+)/(?P<project_id>\d+)/$', project.project_star, name='project_star'),
     re_path(r'^project/unstar/(?P<project_type>\w+)/(?P<project_id>\d+)/$', project.project_unstar, name='project_unstar'),
@@ -26,9 +31,9 @@ urlpatterns = [
     # 项目里
     re_path(r'^manage/(?P<project_id>\d+)/', include((
         [
-            re_path(r'^dashboard/', manage.dashboard, name='dashboard'),
+            # re_path(r'^dashboard/', manage.dashboard, name='dashboard'),
             # re_path(r'^issues/', manage.issues, name='issues'),
-            re_path(r'^statistics/', manage.statistics, name='statistics'),
+            # re_path(r'^statistics/', manage.statistics, name='statistics'),
 
             # wiki
             path('wiki/', wiki.wiki, name='wiki'),
@@ -56,6 +61,14 @@ urlpatterns = [
             path('issues/change/<int:issues_id>', issues.issues_change, name='issues_change'),
             path('issues/invite/url/', issues.invite_url, name='invite_url'),
             
+           # dashboard
+            path('dashboard/', dashboard.dashboard, name='dashboard'),
+            path('dashboard/issues/chart/', dashboard.issues_chart, name='issues_chart'),
+
+            # statistics
+            path('statistics/', statistics.statistics, name='statistics'),
+            path('statistics/priority/', statistics.statistics_priority, name='statistics_priority'),
+            path('statistics/project/user/', statistics.statistics_project_user, name='statistics_project_user'),
             
 
             # re_path(r'^setting/', manage.setting, name='setting'),
