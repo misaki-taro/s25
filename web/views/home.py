@@ -1,7 +1,7 @@
 '''
 Author: Misaki
 Date: 2023-07-24 15:39:06
-LastEditTime: 2023-08-10 19:18:14
+LastEditTime: 2023-08-11 12:32:41
 LastEditors: Misaki
 Description: 
 '''
@@ -12,6 +12,8 @@ from web import models
 from utils.encrypt import uid
 import datetime
 import json
+from django.conf import settings
+from utils.ali.alipay import AliPay
 
 def index(request):
     
@@ -65,7 +67,6 @@ def payment(request, policy_id):
         return redirect('price')
 
     context = {
-        'policy_object': policy_object,
         'policy_id': policy_object.id,
         'number': number,
         'origin_price': origin_price,
@@ -77,8 +78,98 @@ def payment(request, policy_id):
     conn = get_redis_connection()
     key = 'payment_{}'.format(request.tracer.user.mobile_phone)
     conn.set(key, json.dumps(context), ex=60*30) # 设置超时时间30min
+
+    context['policy_object'] = policy_object
+    context['transaction'] = _object
     
     return render(request, 'payment.html', context)
 
 def pay(request):
-    pass
+    conn = get_redis_connection()
+    key = 'payment_{}'.format(request.tracer.user.mobile_phone)
+    context_string = conn.get(key)
+    if not context_string:
+        return redirect('price')
+    context = json.loads(context_string.decode('utf-8'))
+
+    # 1. 数据库中生成交易记录（待支付）
+    #     等支付成功之后，我们需要把订单的状态更新为已支付、开始&结束时间
+    order_id = uid(request.tracer.user.mobile_phone)
+    total_price = context['total_price']
+    models.Transaction.objects.create(
+        status=1,
+        order=order_id,
+        user=request.tracer.user,
+        price_policy_id=context['policy_id'],
+        count=context['number'],
+        price=total_price
+    )
+    # 生成支付链接
+
+    ali_pay = AliPay(
+        appid=settings.ALI_APPID,
+        app_notify_url=settings.ALI_NOTIFY_URL,
+        return_url=settings.ALI_RETURN_URL,
+        app_private_key_path=settings.ALI_PRI_KEY_PATH,
+        alipay_public_key_path=settings.ALI_PUB_KEY_PATH
+    )
+    query_params = ali_pay.direct_pay(
+        subject="trace rpayment",  # 商品简单描述
+        out_trade_no=order_id,  # 商户订单号
+        total_amount=total_price
+    )
+    pay_url = "{}?{}".format(settings.ALI_GATEWAY, query_params)
+    return redirect(pay_url)
+
+def pay_notify(request):
+    """ 支付成功之后触发的URL """
+    ali_pay = AliPay(
+        appid=settings.ALI_APPID,
+        app_notify_url=settings.ALI_NOTIFY_URL,
+        return_url=settings.ALI_RETURN_URL,
+        app_private_key_path=settings.ALI_PRI_KEY_PATH,
+        alipay_public_key_path=settings.ALI_PUB_KEY_PATH
+    )
+
+    if request.method == 'GET':
+        # 只做跳转，判断是否支付成功了，不做订单的状态更新。
+        # 支付吧会讲订单号返回：获取订单ID，然后根据订单ID做状态更新 + 认证。
+        # 支付宝公钥对支付给我返回的数据request.GET 进行检查，通过则表示这是支付宝返还的接口。
+        params = request.GET.dict()
+        sign = params.pop('sign', None)
+        status = ali_pay.verify(params, sign)
+        if status:
+            """
+            current_datetime = datetime.datetime.now()
+            out_trade_no = params['out_trade_no']
+            _object = models.Transaction.objects.filter(order=out_trade_no).first()
+
+            _object.status = 2
+            _object.start_datetime = current_datetime
+            _object.end_datetime = current_datetime + datetime.timedelta(days=365 * _object.count)
+            _object.save()
+            """
+            return HttpResponse('支付完成')
+        return HttpResponse('支付失败')
+    else:
+        from urllib.parse import parse_qs
+        body_str = request.body.decode('utf-8')
+        post_data = parse_qs(body_str)
+        post_dict = {}
+        for k, v in post_data.items():
+            post_dict[k] = v[0]
+
+        sign = post_dict.pop('sign', None)
+        status = ali_pay.verify(post_dict, sign)
+        if status:
+            current_datetime = datetime.datetime.now()
+            out_trade_no = post_dict['out_trade_no']
+            _object = models.Transaction.objects.filter(order=out_trade_no).first()
+
+            _object.status = 2
+            _object.start_datetime = current_datetime
+            _object.end_datetime = current_datetime + datetime.timedelta(days=365 * _object.count)
+            _object.save()
+            return HttpResponse('success')
+
+        return HttpResponse('error')

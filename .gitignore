@@ -10,6 +10,7 @@ __pycache__/
 local_settings.py
 *.sqlite3
 s25/local_settings.py
+files/*
 
 # database migrations
 */migrations/*.py
